@@ -1,0 +1,29 @@
+library(mlbench)
+# Loading package 
+library(e1071) 
+library(caTools) 
+library(caret)
+library(mice)
+library(ggplot2)
+library(lattice)
+
+data("BreastCancer")
+levels(BreastCancer$Class) #benign and malignant
+
+dataset1_impute <- mice(BreastCancer[,2:10],  print = FALSE) #deleting the NAs and id and class columns
+BreastCancer <- cbind(BreastCancer[,11, drop = FALSE], mice::complete(dataset1_impute, 1)) #binding the class column to the training data
+set.seed(150)    
+split=sample.split(BreastCancer, SplitRatio = 0.85)  #selecting the ratio of the split
+training_set=subset(BreastCancer,split==TRUE)        
+test_set=subset(BreastCancer,split==FALSE)          
+
+topredict_set<-test_set[2:10]                       # Removing class column  
+
+model1<- naiveBayes(Class ~ ., data = training_set)  #Implementing NaiveBayes 
+
+predict1 <- predict(model1, newdata = topredict_set)        #Predicting target class for the Validation set
+
+predict1
+
+(conf_matrix_naive <- table(predict1, test_set$Class)) #creating the confusion matrix
+confusionMatrix(conf_matrix_naive)  
